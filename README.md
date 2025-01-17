@@ -47,6 +47,19 @@ Also, [requests](https://pypi.org/project/requests/) is used to work with Outlin
 pip install requests
 ```
 
+And probably, you will need the `aiohttp` library:
+
+```
+pip install aiohttp
+```
+
+If you're going to use the WARP AmneziaVPN config generator, then you need to install the `cryptography` library:
+
+```
+pip install cryptography
+```
+
+
 ### Download the bot
 
 Next, time to download the bot itself:

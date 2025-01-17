@@ -8,11 +8,12 @@ assert ADMIN_CHAT_ID is not None
 monitor = telebot.TeleBot(MONITOR_API_TOKEN)
 
 
-def new_key_created(key_id: int, key_name: str, chat_id: int, server_id: str) -> None:
+def new_key_created(key_id: int, key_name: str, chat_id: int, username: str, server_id: str) -> None:
     answer = ("New key created:" + 
             "\nkey_id: "     + str(key_id) + 
             "\nkey_name: "   + str(key_name) + 
             "\nchat_id: "    + str(chat_id) + 
+            "\nusername: "    + str(username) + 
             "\nserver_id: "  + str(server_id) 
              )
     monitor.send_message(ADMIN_CHAT_ID, answer)

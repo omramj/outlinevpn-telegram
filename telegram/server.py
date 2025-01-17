@@ -1,4 +1,5 @@
-import telebot
+import asyncio
+from telebot.async_telebot import AsyncTeleBot
 from telebot import types
 from settings import (
         BOT_API_TOKEN,
@@ -8,16 +9,13 @@ from settings import (
         ENABLE_BLACKLIST,
         ENABLE_WHITELIST
         )
-import telegram.monitoring as monitoring
-import outline.api as outline
-from settings import BOT_API_TOKEN, DEFAULT_SERVER_ID, BLACKLISTED_CHAT_IDS
-from helpers.exceptions import KeyCreationError, KeyRenamingError, InvalidServerIdError
+import controller as ctl
+from settings import BOT_API_TOKEN, DEFAULT_SERVER_ID, BLACKLISTED_CHAT_IDS, ADMIN_CHAT_ID
 import telegram.message_formatter as f
-from helpers.aliases import ServerId
 
 
 assert BOT_API_TOKEN is not None
-bot = telebot.TeleBot(BOT_API_TOKEN, parse_mode='HTML')
+bot = AsyncTeleBot(BOT_API_TOKEN, parse_mode='HTML')
 
 
 def authorize(func):
@@ -26,12 +24,12 @@ def authorize(func):
         chat_id_to_check = message.chat.id
 
         if ENABLE_BLACKLIST and str(chat_id_to_check) in BLACKLISTED_CHAT_IDS:
-            monitoring.report_blacklist_attempt(message.from_user.username,
+            ctl.report_blacklist_attempt(message.from_user.username,
                                                 chat_id_to_check)
             return
 
         if ENABLE_WHITELIST and str(chat_id_to_check) not in WHITELISTED_CHAT_IDS:
-            monitoring.report_not_in_whitelist(message.from_user.username,
+            ctl.report_not_in_whitelist(message.from_user.username,
                                                 chat_id_to_check)
             return
 
@@ -42,112 +40,99 @@ def authorize(func):
 @bot.message_handler(commands = ['status'])
 @authorize
 def send_status(message):
-    monitoring.send_api_status()
+    ctl.send_api_status()
 
 
 @bot.message_handler(commands = ['start'])
 @authorize
-def send_welcome(message):
-    bot.send_message(message.chat.id,
+async def send_welcome(message):
+    await bot.send_message(message.chat.id,
     "Hey! This bot is used for creating Outline keys.",
     reply_markup = _make_main_menu_markup())
 
     
 @bot.message_handler(commands = ['help'])
 @authorize
-def send_help(message):
-    bot.send_message(message.chat.id, f.make_help_message())
+async def send_help(message):
+    await bot.send_message(message.chat.id, f.make_help_message())
 
 
 @bot.message_handler(commands = ['servers'])
 @authorize
-def send_servers_list(message):
-    bot.send_message(message.chat.id, f.make_servers_list())
+async def send_servers_list(message):
+    await bot.send_message(message.chat.id, f.make_servers_list())
 
 
 @bot.message_handler(content_types = ['text'])
 @authorize
-def anwser(message):
-    if message.text == "New Outline Key":
-        server_id = DEFAULT_SERVER_ID
-        key_name = _form_key_name(message)
-        _make_new_key(message, server_id, key_name)
-
-    elif message.text == "Download Outline":
-        bot.send_message(message.chat.id,
-                         f.make_download_message(),
-                         disable_web_page_preview=True
-                         )
-
-    elif message.text == "Help":
-        bot.send_message(message.chat.id, f.make_help_message())
-
-    elif message.text[:7] == "/newkey":
-        server_id, key_name = _parse_the_command(message)
-        _make_new_key(message, server_id, key_name)
-
-    else:
-        bot.send_message(message.chat.id,
-                "Unknown command.",
-                reply_markup = _make_main_menu_markup())
-                
-
-def _make_new_key(message, server_id: ServerId, key_name: str):
+async def anwser(message):
 
     try:
-        key = outline.get_new_key(key_name, server_id)
+        if message.text == "New Outline Key":
+            key = ctl.create_new_key(message)
+            await _send_key(message, key)
+            
+        elif message.text == "WARP for AmneziaVPN":
+            if _user_is_admin(message):
+                key = ctl.create_new_key(message, type="amnezia-warp")
+                await _send_key(message, key, type="amnezia-warp")
 
-        _send_key(message, key, server_id)
+        elif message.text.startswith("https://portal.itgen.io/"):
+            key = ctl.create_new_key(message)
+            await _send_key(message, key)
 
-    except KeyCreationError:
-        error_message = "API error: cannot create the key"
-        _send_error_message(message, error_message)
+        elif message.text == "Downloads":
+            await bot.send_message(message.chat.id,
+                             f.make_download_message(),
+                             disable_web_page_preview=True
+                             )
 
-    except KeyRenamingError:
-        error_message = "API error: cannot rename the key"
-        _send_error_message(message, error_message)
+        elif message.text == "Help":
+            await bot.send_message(message.chat.id, f.make_help_message())
 
-    except InvalidServerIdError:
-        message_to_send = "The server id does not exist."
-        bot.send_message(message.chat.id, message_to_send)
+        elif message.text[:7] == "/newkey":
+            server_id, key_name = _parse_newkey_command(message)
+            key = ctl.create_new_key(message, server_id, key_name)
+            await _send_key(message, key, type="outline")
 
+        else:
+            await bot.send_message(message.chat.id,
+                    "Unknown command.",
+                    reply_markup = _make_main_menu_markup())
+    except Exception as e:
+        #TODO
+        print("Something went wrong...", e)
+                
 
-def _send_key(message, key, server_id):
+async def _send_key(message, key, type: str = "outline"):
 
-    text = f.make_message_for_new_key("outline", key.access_url, server_id)
+    text = f.make_message_for_new_key(type, key.access_url, key.server_id)
 
-    bot.send_message(
+    await bot.send_message(
             message.chat.id,
             text
             )
-    monitoring.new_key_created(key.kid, key.name, message.chat.id, 
-        server_id)
-
-
-def _send_error_message(message, error_message):
-
-        bot.send_message(message.chat.id, error_message)
-
-        monitoring.send_error(error_message, message.from_user.username, 
-                message.from_user.first_name, message.from_user.last_name)
+    ctl.send_monitoring_new_key_created(key, message)
 
 
 def _make_main_menu_markup() -> types.ReplyKeyboardMarkup:
     menu_markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
     
     keygen_server1_button = types.KeyboardButton("New Outline Key")
-    download_button = types.KeyboardButton("Download Outline")
+    keygen_awg_warp_button = types.KeyboardButton("WARP for AmneziaVPN")
+    download_button = types.KeyboardButton("Downloads")
     help_button = types.KeyboardButton("Help")
 
     menu_markup.add(
             keygen_server1_button,
+            keygen_awg_warp_button,
             download_button,
             help_button
             )
     return menu_markup
 
 
-def _parse_the_command(message) -> list:
+def _parse_newkey_command(message) -> list:
     arguments = message.text[8:].split()
 
     if arguments != []:
@@ -158,17 +143,19 @@ def _parse_the_command(message) -> list:
     key_name = ''.join(arguments[1:])
 
     if key_name == '': 
-        key_name = _form_key_name(message)
+        key_name = ctl.form_key_name(message)
     
     return [server_id, key_name]
 
 
-def _form_key_name(message) -> str:
-    key_name = message.from_user.username
+def _user_is_admin(message) -> bool:
 
-    return key_name
+    if str(message.chat.id) == str(ADMIN_CHAT_ID):
+        return True
+
+    return False
 
 
 def start_telegram_server():
-    monitoring.send_start_message()
-    bot.infinity_polling()
+    ctl.send_monitoring_start_message()
+    asyncio.run(bot.infinity_polling())

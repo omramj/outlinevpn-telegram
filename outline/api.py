@@ -23,7 +23,7 @@ def get_new_key(key_name: str | None, server_id: ServerId) -> OutlineKey:
     _rename_key(key_id, key_name, server_id)
 
     assert key_name is not None
-    key = OutlineKey(kid=key_id, name=key_name, access_url=access_url)
+    key = OutlineKey(kid=key_id, name=key_name, access_url=access_url, server_id=server_id)
 
     return key
 

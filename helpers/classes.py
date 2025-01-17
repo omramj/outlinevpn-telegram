@@ -10,11 +10,14 @@ class OutlineKey(NamedTuple):
     kid: KeyId
     name: str
     access_url: AccessUrl
+    server_id: str
 
 
 class AmneziaKey(NamedTuple):
+    kid: str
     name: str
-    access_url: str
+    access_url: AccessUrl
+    server_id: str
 
 
 class OutlineServer:

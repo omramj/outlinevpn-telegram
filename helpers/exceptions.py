@@ -9,3 +9,6 @@ class KeyRenamingError(ApiServiceError):
 
 class InvalidServerIdError(Exception):
     """Server ID does not exist"""
+
+class InvalidGenaProfileLink(Exception):
+    """The passed link is not a link to a gena profile."""
