@@ -53,7 +53,7 @@ And probably, you will need the `aiohttp` library:
 pip install aiohttp
 ```
 
-If you're going to use the WARP AmneziaVPN config generator, then you need to install the `cryptography` library:
+And you need to install the `cryptography` library, it is needed for creating AmneziaVPN keys:
 
 ```
 pip install cryptography
@@ -72,7 +72,11 @@ cd telegram-bot-for-outline-vpn
 
 ## How to configure
 
-Do you see the `settings.json` file? Yeap, this is the file where all configuration will take place.
+You need to create a file called `settings.json`? This is the file where all configuration will take place. You can create it from the template provided in the repo:
+
+```
+cp settings-template.json settings.json
+```
 
 ### Configuring servers
 
