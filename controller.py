@@ -10,7 +10,6 @@ from helpers.exceptions import (
         KeyCreationError,
         KeyRenamingError,
         InvalidServerIdError,
-        InvalidGenaProfileLink
         )
 from helpers.aliases import ServerId
 
@@ -50,14 +49,6 @@ def create_new_key(message, server_id: ServerId = DEFAULT_SERVER_ID,
         print(error_message)
         raise KeyRenamingError
     
-    except InvalidGenaProfileLink:
-        error_message = "Не удалось прочитать ссылку. Убедитесь, что:" + \
-        "\n- Это ссылка на профиль в гене вида 'https://portal.itgen.io/profile/pXJnTMuEDANov9sMY'." + \
-        "\n- Ссылка начинается с 'https://'."
-        send_monitoring_error_message(message, error_message)
-        print(error_message)
-        raise InvalidGenaProfileLink
-
     except InvalidServerIdError:
         error_message = "The server id does not exist."
         send_monitoring_error_message(message, error_message)

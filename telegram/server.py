@@ -9,6 +9,11 @@ from settings import (
         ENABLE_BLACKLIST,
         ENABLE_WHITELIST
         )
+from helpers.exceptions import (
+        KeyCreationError,
+        KeyRenamingError,
+        InvalidServerIdError
+        )
 import controller as ctl
 from settings import BOT_API_TOKEN, DEFAULT_SERVER_ID, BLACKLISTED_CHAT_IDS, ADMIN_CHAT_ID
 import telegram.message_formatter as f
@@ -99,9 +104,18 @@ async def anwser(message):
             await bot.send_message(message.chat.id,
                     "Unknown command.",
                     reply_markup = _make_main_menu_markup())
-    except Exception as e:
-        #TODO
-        print("Something went wrong...", e)
+
+    # TODO: logging
+    except KeyCreationError or KeyRenamingError:
+        error_message = "Sorry, there is an error on our side. Could not create a key for you"
+        print(error_message)
+        await _send_error(message, error_message)
+
+    except InvalidServerIdError:
+        error_message = "The server id does not exist."
+        print(error_message)
+        await _send_error(message, error_message)
+        raise InvalidServerIdError
                 
 
 async def _send_key(message, key):
@@ -113,6 +127,14 @@ async def _send_key(message, key):
             text
             )
     ctl.send_monitoring_new_key_created(key, message)
+
+
+async def _send_error(message, error_text):
+
+    await bot.send_message(
+            message.chat.id,
+            error_text
+            )
 
 
 def _make_main_menu_markup() -> types.ReplyKeyboardMarkup:
