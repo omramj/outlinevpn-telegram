@@ -5,14 +5,13 @@ from settings import (
 import telegram.monitoring as monitoring
 import outline.api as outline
 import amnezia.controller as amnezia
-from settings import BOT_API_TOKEN, DEFAULT_SERVER_ID, BLACKLISTED_CHAT_IDS, ADMIN_CHAT_ID
+from settings import BOT_API_TOKEN, DEFAULT_SERVER_ID
 from helpers.exceptions import (
         KeyCreationError,
         KeyRenamingError,
         InvalidServerIdError,
         InvalidGenaProfileLink
         )
-import telegram.message_formatter as f
 from helpers.aliases import ServerId
 
 
