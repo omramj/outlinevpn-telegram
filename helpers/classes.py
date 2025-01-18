@@ -6,18 +6,12 @@ class Key(NamedTuple):
     pass
 
 
-class OutlineKey(NamedTuple):
-    kid: KeyId
-    name: str
-    access_url: AccessUrl
-    server_id: str
-
-
-class AmneziaKey(NamedTuple):
+class TextKey(NamedTuple):
+    type: str
     kid: str
     name: str
-    access_url: AccessUrl
     server_id: str
+    access_string: AccessUrl
 
 
 class OutlineServer:

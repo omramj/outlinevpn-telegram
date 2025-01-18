@@ -7,10 +7,10 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from requests import Response
 from amnezia import warp_api
 
-from helpers.classes import AmneziaKey
+from helpers.classes import TextKey
 
 
-def generate_amnezia_key(type: str = "amnezia-warp", keyname: str = "TODO") -> AmneziaKey:
+def generate_amnezia_key(type: str = "amnezia-warp", keyname: str = "TODO") -> TextKey:
 
     if type == "amnezia-warp":
         amnezia_config_plaintext = _create_warp_config()
@@ -22,10 +22,11 @@ def generate_amnezia_key(type: str = "amnezia-warp", keyname: str = "TODO") -> A
 
     awg_config_base64 = _encode_base64(amnezia_config_plaintext)
 
-    key = AmneziaKey(kid=kid,
-                     name=keyname,
-                     access_url=awg_config_base64,
-                     server_id=server_id)
+    key = TextKey(type=type,
+                  kid=kid,
+                  name=keyname,
+                  access_string=awg_config_base64,
+                  server_id=server_id)
 
     return key
 

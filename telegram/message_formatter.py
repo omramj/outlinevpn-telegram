@@ -9,26 +9,26 @@ from settings import (
     servers
     )
 from helpers.aliases import ServerId
+from helpers.classes import TextKey
 from textwrap import dedent
 
 
-def make_message_for_new_key(type: str, access_key: str,
-                             server_id: ServerId) -> str:
+def make_message_for_new_key(key: TextKey) -> str:
    #print(f"message_formatter: type: {type}")
-   if type == "outline":
+   if key.type == "outline":
       message_to_send = dedent(
    f"""Your key:
-      \n<code>{access_key}</code>
+      \n<code>{key.access_string}</code>
       \nTap to copy.
-      \nServer is located in: <b>{servers[server_id].location}</b>
+      \nServer is located in: <b>{servers[key.server_id].location}</b>
       \nThis key should be pasted to <b>Outline Client.</b>
       """)
 
-   elif type == "amnezia-warp":
+   elif key.type == "amnezia-warp":
 
       message_to_send = dedent(
    f"""Your key:
-      \n<code>{access_key}</code>
+      \n<code>{key.access_string}</code>
       \nTap to copy.
       \nThis key should be pasted to <b>AmneziaVPN</b> or <b>AmneziaWG.</b>
       """)

@@ -75,7 +75,7 @@ async def anwser(message):
         elif message.text == "WARP for AmneziaVPN":
             if _user_is_admin(message):
                 key = ctl.create_new_key(message, type="amnezia-warp")
-                await _send_key(message, key, type="amnezia-warp")
+                await _send_key(message, key)
 
         elif message.text.startswith("https://portal.itgen.io/"):
             key = ctl.create_new_key(message)
@@ -93,7 +93,7 @@ async def anwser(message):
         elif message.text[:7] == "/newkey":
             server_id, key_name = _parse_newkey_command(message)
             key = ctl.create_new_key(message, server_id, key_name)
-            await _send_key(message, key, type="outline")
+            await _send_key(message, key)
 
         else:
             await bot.send_message(message.chat.id,
@@ -104,9 +104,9 @@ async def anwser(message):
         print("Something went wrong...", e)
                 
 
-async def _send_key(message, key, type: str = "outline"):
+async def _send_key(message, key):
 
-    text = f.make_message_for_new_key(type, key.access_url, key.server_id)
+    text = f.make_message_for_new_key(key)
 
     await bot.send_message(
             message.chat.id,
